@@ -24,6 +24,7 @@
                         <RowDefinition Height="45" />
                         <RowDefinition Height="45" />
                         <RowDefinition Height="45" />
+                        <RowDefinition Height="45" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="40" />
@@ -101,6 +102,22 @@
                         local:CustomEventService.EventData="https://github.com/PCL-Community/PCL2-CE"
                         local:CustomEventService.EventType="OpenUrl"
                         Text="{DynamicResource Setup.About.SourceCode}" />
+                    <local:MyListItem
+                        x:Name="ItemQustmc"
+                        Grid.Row="3"
+                        Grid.Column="1"
+                        Margin="-5,0,15,0"
+                        Info="PCL-CEedit"
+                        IsHitTestVisible="False"
+                        Title="QUSTMC" />
+                    <local:MyButton
+                        x:Name="BtnQustmc"
+                        Grid.Row="3"
+                        Grid.Column="2"
+                        Height="35"
+                        local:CustomEventService.EventData="https://github.com/QUSTMC"
+                        local:CustomEventService.EventType="OpenUrl"
+                        Text="{DynamicResource Setup.About.GitHubHome}" />
                 </Grid>
             </local:MyCard>
             <local:MyCard Margin="0,0,0,15" Title="{DynamicResource Setup.About.SpecialThanks.Title}">

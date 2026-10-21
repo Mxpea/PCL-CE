@@ -24,7 +24,6 @@ public partial class PageSetupUpdate
         TextMirrorCDK.Password = Config.Update.MirrorChyanKey;
 
         ComboSystemUpdateChannel.SelectedIndex = (int)Config.Update.UpdateChannel;
-        ComboSystemUpdateMode.SelectedIndex = (int)Config.Update.UpdateMode;
 
         TextCurrentVersion.Text = "PCL CE " + VersionNameFormat(ModBase.versionBaseName);
         ModAnimation.AniControlEnabled -= 1;
@@ -44,14 +43,17 @@ public partial class PageSetupUpdate
                     ModBase.versionCode))
             {
                 ModBase.Log("[Update] 已是最新版本");
+                UpdateManager.CachedVersionStatus = UpdateEnums.VersionStatus.Latest;
                 return UpdateStatus.Latest;
             }
 
             ModBase.Log("[Update] 有可用的新版本");
+            UpdateManager.CachedVersionStatus = UpdateEnums.VersionStatus.NotLatest;
             return UpdateStatus.Available;
         }
         catch (Exception ex)
         {
+            UpdateManager.CachedVersionStatus = UpdateEnums.VersionStatus.Unknown;
             ModBase.Log(
                 ex,
                 Lang.Text("Setup.Update.Error.NetworkFailed"),
@@ -114,11 +116,6 @@ public partial class PageSetupUpdate
                     BtnUpdate_Timer();
                     BtnUpdate.IsEnabled = false;
                 }
-                else if (UpdateManager.isUpdateWaitingRestart)
-                {
-                    BtnUpdate.Text = Lang.Text("Setup.Update.RestartInstall");
-                    BtnUpdate.IsEnabled = true;
-                }
                 else
                 {
                     BtnUpdate.Text = Lang.Text("Setup.Update.Install");
@@ -159,9 +156,8 @@ public partial class PageSetupUpdate
 
     private void BtnUpdate_Click(object sender, MouseButtonEventArgs e)
     {
-        if (UpdateManager.isUpdateWaitingRestart) UpdateManager.UpdateRestart(true);
         // 开始更新流程
-        UpdateManager.UpdateStart(UpdateEnums.UpdateType.UpdateNow);
+        UpdateManager.UpdateStart();
     }
 
     private void BtnChangelogDetail_Click(object sender, EventArgs e)
@@ -170,12 +166,6 @@ public partial class PageSetupUpdate
             ModMain.MyMsgBox(Lang.Text("Setup.Update.Changelog.Unavailable"), Lang.Text("Setup.Update.Changelog.Title"));
         else
             ModMain.MyMsgBoxMarkdown(updateInfo.Changelog, Lang.Text("Setup.Update.Changelog.Title"));
-    }
-
-    private void ComboSystemUpdateMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (ModAnimation.AniControlEnabled == 0)
-            Config.Update.UpdateMode = (LauncherAutoUpdateBehavior)ComboSystemUpdateMode.SelectedIndex;
     }
 
     private void ComboSystemUpdateBranch_SelectionChanged(object sender, SelectionChangedEventArgs e)

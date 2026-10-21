@@ -8,12 +8,4 @@ public static class UpdateEnums
         NotLatest,
         Unknown
     }
-    
-    public enum UpdateType
-    {
-        Silent = 0,
-        PromptOnly = 1,
-        DownloadAndPrompt = 2,
-        UpdateNow = 3
-    }
 }

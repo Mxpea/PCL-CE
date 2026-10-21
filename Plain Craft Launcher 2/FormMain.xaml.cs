@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
@@ -71,15 +71,6 @@ public partial class FormMain
         var lastVersion = States.System.LastVersion;
         if (lastVersion < ModBase.versionCode)
         {
-            // 重新询问是否启用遥测数据收集
-            if (lastVersion <= 511)
-            {
-                if (!Config.System.TelemetryConfig.IsDefault() && Config.System.Telemetry)
-                {
-                    Config.System.TelemetryConfig.Reset();
-                    ModBase.Log("[Start] 遥测策略变更：由旧版本升级到含新版遥测的版本，已重置遥测设置");
-                }
-            }
             // 触发升级
             UpgradeSub(lastVersion);
         }
@@ -158,7 +149,6 @@ public partial class FormMain
         PageSetupUI.BackgroundRefresh(false, true);
         ModMusic.MusicRefreshPlay(false, true);
         // 扩展按钮
-        BtnExtraUpdateRestart.showCheck = BtnExtraUpdateRestart_ShowCheck;
         BtnExtraDownload.showCheck = BtnExtraDownload_ShowCheck;
         BtnExtraBack.showCheck = BtnExtraBack_ShowCheck;
         BtnExtraApril.showCheck = BtnExtraApril_ShowCheck;
@@ -265,20 +255,12 @@ public partial class FormMain
                             }
                     }
 
-                // 遥测提示
-                if (Config.System.TelemetryConfig.IsDefault())
-                {
-                    var selection = ModMain.MyMsgBox(
-                                Lang.Text("Main.Telemetry.Message"),
-                                Lang.Text("Main.Telemetry.Title"), Lang.Text("Common.Action.Agree"), Lang.Text("Common.Action.Decline"));
-                    Config.System.TelemetryConfig.SetValue(selection == 1, forceNewValue: true);
-                }
                 // 启动加载器池
                 try
                 {
                     ModDownload.dlClientListMojangLoader.Start(1); // PCL 会同时根据这里的加载结果决定是否使用官方源进行下载
                     RunCountSub();
-                    UpdateManager.serverLoader.Start(1);
+                    ModBase.RunInNewThread(AnnouncementService.Load, "LoadAnnouncements", ThreadPriority.BelowNormal);
                     ModBase.RunInNewThread(ModMain.TryClearTaskTemp, "TryClearTaskTemp", ThreadPriority.BelowNormal);
                 }
                 catch (Exception ex)
@@ -498,8 +480,7 @@ public partial class FormMain
     ///     正常关闭程序。程序将在执行此方法后约 0.3s 退出。
     /// </summary>
     /// <param name="sendWarning">是否在还有下载任务未完成时发出警告。</param>
-    /// <param name="isUpdating">是否正在更新重启</param>
-    public void EndProgram(bool sendWarning, bool isUpdating = false)
+    public void EndProgram(bool sendWarning)
     {
         // 发出警告
         if (sendWarning && ModNet.HasDownloadingTask())
@@ -556,12 +537,12 @@ public partial class FormMain
                         Visibility = Visibility.Collapsed;
                         ShowInTaskbar = false;
                     }, 210),
-                    ModAnimation.AaCode(() => EndProgramForce(force: false, isUpdating: isUpdating), 230)
+                    ModAnimation.AaCode(() => EndProgramForce(force: false), 230)
                 }, "Form Close");
             }
             else
             {
-                EndProgramForce(force: false, isUpdating: isUpdating);
+                EndProgramForce(force: false);
             }
 
             ModBase.Log("[System] 收到关闭指令");
@@ -571,15 +552,13 @@ public partial class FormMain
     private static bool isLogShown;
 
     public static void EndProgramForce(ModBase.ProcessReturnValues returnCode = ModBase.ProcessReturnValues.Success,
-        bool force = true, bool isUpdating = false)
+        bool force = true)
     {
         // On Error Resume Next
         // 关闭联机大厅
         // Await LobbyController.CloseAsync().ConfigureAwait(False)
         ModBase.isProgramEnded = true;
         ModAnimation.AniControlEnabled += 1;
-        if (UpdateManager.isUpdateWaitingRestart && !isUpdating)
-            UpdateManager.UpdateRestart(false, false);
         if (returnCode == ModBase.ProcessReturnValues.Exception)
         {
             if (!isLogShown)
@@ -2132,17 +2111,6 @@ public partial class FormMain
     #endregion
 
     #region 附加按钮
-
-    // 更新重启
-    private void BtnExtraUpdateRestart_Click(object sender, MouseButtonEventArgs e)
-    {
-        UpdateManager.UpdateRestart(true);
-    }
-
-    private bool BtnExtraUpdateRestart_ShowCheck()
-    {
-        return UpdateManager.isUpdateWaitingRestart;
-    }
 
     // 音乐
     private void BtnExtraMusic_Click(object sender, MouseButtonEventArgs e)

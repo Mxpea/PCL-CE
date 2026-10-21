@@ -179,7 +179,7 @@ public static class ProfileUi
         return uuid;
     }
 
-    public static bool CanCreateOtherProfile()
+    public static bool CanCreateOfflineProfile()
     {
 #if DEBUG || DEBUGCI
         return true;
@@ -193,8 +193,8 @@ public static class ProfileUi
         int? selected = null;
         ModBase.RunInUiWait(() =>
         {
-            var includeOthers = CanCreateOtherProfile();
-            selected = ModMain.MyMsgBoxSelect(_GetAvailableProfileSelection(includeOthers),
+            var includeOffline = CanCreateOfflineProfile();
+            selected = ModMain.MyMsgBoxSelect(_GetAvailableProfileSelection(includeOffline),
                 Lang.Text("Launch.Account.Profile.Create.SelectAuthType.Title"), Lang.Text("Common.Action.Continue"), Lang.Text("Common.Action.Cancel"));
         });
         if (selected is null) return;
@@ -222,13 +222,16 @@ public static class ProfileUi
         ModBase.RunInUi(() => ModMain.frmLaunchLeft.RefreshPage(true, type));
     }
 
-    private static List<IMyRadio> _GetAvailableProfileSelection(bool includeOthers) => includeOthers
-        ? [
+    private static List<IMyRadio> _GetAvailableProfileSelection(bool includeOffline)
+    {
+        List<IMyRadio> options = [
             new MyListItem { Title = Lang.Text("Launch.Account.Type.Microsoft"), Type = MyListItem.CheckType.RadioBox, SvgIcon = "lucide/shield-check" },
-            new MyListItem { Title = Lang.Text("Launch.Account.Type.ThirdParty"), Type = MyListItem.CheckType.RadioBox, SvgIcon = "lucide/network" },
-            new MyListItem { Title = Lang.Text("Launch.Account.Type.Offline"), Type = MyListItem.CheckType.RadioBox, SvgIcon = "lucide/link-2-off" }
-        ]
-        : [new MyListItem { Title = Lang.Text("Launch.Account.Type.Microsoft"), Type = MyListItem.CheckType.RadioBox, SvgIcon = "lucide/shield-check" }];
+            new MyListItem { Title = Lang.Text("Launch.Account.Type.ThirdParty"), Type = MyListItem.CheckType.RadioBox, SvgIcon = "lucide/network" }
+        ];
+        if (includeOffline)
+            options.Add(new MyListItem { Title = Lang.Text("Launch.Account.Type.Offline"), Type = MyListItem.CheckType.RadioBox, SvgIcon = "lucide/link-2-off" });
+        return options;
+    }
 
     public static void EditProfileId()
     {

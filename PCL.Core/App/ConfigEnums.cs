@@ -1,5 +1,12 @@
 namespace PCL.Core.App;
 
+/// <summary>文件下载后端；元数据请求仍使用启动器内置网络层。</summary>
+public enum DownloadBackend
+{
+    BuiltIn = 0,
+    Aria2 = 1
+}
+
 /// <summary>
 /// 联机协议偏好
 /// </summary>
@@ -104,17 +111,6 @@ public enum LinkRelayBehavior
 {
     Default = 0,
     ForceRelay = 1
-}
-
-/// <summary>
-/// 启动器更新行为
-/// </summary>
-public enum LauncherAutoUpdateBehavior
-{
-    DownloadAndInstall = 0,
-    DownloadAndAnnounce = 1,
-    AnnounceOnly = 2,
-    Disable = 3
 }
 
 public enum LauncherTitleType

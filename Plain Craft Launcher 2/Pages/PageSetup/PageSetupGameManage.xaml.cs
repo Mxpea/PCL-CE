@@ -54,6 +54,8 @@ public partial class PageSetupGameManage
         SliderDownloadFileConnection.Value = Config.Download.FileConnectionLimit;
         SliderDownloadSpeed.Value = Config.Download.SpeedLimit;
         ComboDownloadHttpMode.SelectedIndex = (int)Config.Download.HttpMode;
+        ComboDownloadBackend.SelectedIndex = (int)Config.Download.Backend;
+        ComboDownloadHttpMode.IsEnabled = Config.Download.Backend != DownloadBackend.Aria2;
         ComboDownloadSource.SelectedIndex = Config.Download.FileSource;
         ComboDownloadVersion.SelectedIndex = Config.Download.VersionListSource;
         CheckDownloadAutoSelectVersion.Checked = Config.Download.AutoSelectInstance;
@@ -118,6 +120,8 @@ public partial class PageSetupGameManage
         var sender = (MyComboBox)senderRaw;
         if (ModAnimation.AniControlEnabled == 0)
             SetByTag(sender.Tag?.ToString(), sender.SelectedIndex);
+        if (ReferenceEquals(sender, ComboDownloadBackend))
+            ComboDownloadHttpMode.IsEnabled = sender.SelectedIndex != (int)DownloadBackend.Aria2;
     }
 
     private static void SetByTag(string tag, object value)

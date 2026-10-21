@@ -1601,7 +1601,6 @@
     <sys:String x:Key="Launch.Account.Profile.Create">新建档案</sys:String>
     <sys:String x:Key="Launch.Account.Profile.Create.SelectAuthType.Title">新建档案 - 选择验证类型</sys:String>
     <sys:String x:Key="Launch.Account.Profile.CreateAndSelectHint">新建并选择一个档案以启动游戏</sys:String>
-    <sys:String x:Key="Launch.Account.Profile.RequireMicrosoftHint">需要先进行一次正版验证才能使用其他验证方式</sys:String>
     <sys:String x:Key="Launch.Account.Profile.Created">档案新建成功！</sys:String>
     <sys:String x:Key="Launch.Account.Profile.Delete">删除档案</sys:String>
     <sys:String x:Key="Launch.Account.Profile.DeleteConfirm.Message">你正在选择删除此档案，该操作无法撤销。&#xA;确定继续？</sys:String>
@@ -1902,8 +1901,6 @@
     <sys:String x:Key="Main.Extra.GiveUp.ToolTip">投降</sys:String>
     <sys:String x:Key="Main.Extra.ShutdownMinecraft.ToolTip">关闭 Minecraft</sys:String>
     <sys:String x:Key="Main.Extra.TaskManager.ToolTip">任务管理</sys:String>
-    <sys:String x:Key="Main.Extra.UpdateRestart.ToolTip">重启 PCL CE 以应用软件更新</sys:String>
-    <sys:String x:Key="Main.Extra.UpdateRestart.ToolTipWithVersion">重启 PCL CE 以应用软件更新 ({0} → {1})</sys:String>
     <sys:String x:Key="Main.HiddenFeature.Disabled">功能隐藏设置已暂时关闭！</sys:String>
     <sys:String x:Key="Main.HiddenFeature.Enabled">功能隐藏设置已重新开启！</sys:String>
     <sys:String x:Key="Main.ShutdownMinecraft.Success">已关闭运行中的 Minecraft！</sys:String>
@@ -1917,8 +1914,6 @@
     <sys:String x:Key="Main.Tab.Launch">启动</sys:String>
     <sys:String x:Key="Main.Tab.Settings">设置</sys:String>
     <sys:String x:Key="Main.Tab.Tools">工具</sys:String>
-    <sys:String x:Key="Main.Telemetry.Message">启用遥测数据收集后，启动器将会收集并上报错误与设备环境信息，这可以帮助开发者修复潜在的问题、更好的进行规划和开发。&#xA;若启用此功能，我们将会收集以下信息：&#xA;&#xA;- 启动器内出现的错误&#xA;- 启动器版本信息与识别码&#xA;- Windows 系统版本与架构&#xA;- 已安装的物理内存大小&#xA;- NAT 与 IPv6 支持情况&#xA;- 是否使用过原版 PCL、HMCL 或 BakaXL&#xA;&#xA;这些数据均不与你关联，我们也绝不会向第三方出售数据。&#xA;如果不希望启用遥测，可以选择拒绝。这不会影响其他功能的正常使用，但可能会影响开发者修复潜在 Bug。&#xA;你可以随时在启动器设置中调整这项设置。</sys:String>
-    <sys:String x:Key="Main.Telemetry.Title">启用遥测数据收集</sys:String>
     <sys:String x:Key="Main.Title.GameLog">实时日志</sys:String>
     <sys:String x:Key="Main.Title.InstanceSelect">实例选择</sys:String>
     <sys:String x:Key="Main.Title.InstanceSetup">实例设置 - {0}</sys:String>
@@ -3012,8 +3007,6 @@
     <sys:String x:Key="Setup.Misc.System.StopUsingPclCe.Message.Final">你确定要继续操作吗？这是最后警告！&#xA;与 PCL CE 有关的一切数据将被永久消除！（真的很久！）</sys:String>
     <sys:String x:Key="Setup.Misc.System.StopUsingPclCe.Message">即将删除此电脑上与 PCL CE 有关的全部配置、缓存、已保存的账户信息及其他相关数据，并撤销已接受的许可协议。完成后，软件将自动关闭。&#xA;&#xA;但请注意，以下内容无法自动删除或注销：&#xA;- 此电脑上其他 PCL CE 实例的本地数据&#xA;- Natayark 账户&#xA;&#xA;如需同时删除 Minecraft 实例中的 PCL CE 配置文件，请选择“继续并清理实例文件夹”，这不会影响你的游戏配置、模组、存档，以及其他数据。&#xA;&#xA;此操作无法撤销。您确定要继续吗？</sys:String>
     <sys:String x:Key="Setup.Misc.System.StopUsingPclCe.Title">停止使用 PCL CE？</sys:String>
-    <sys:String x:Key="Setup.Misc.System.Telemetry">启用遥测数据收集</sys:String>
-    <sys:String x:Key="Setup.Misc.System.Telemetry.ToolTip">启用此功能后，启动器将会收集并上报错误与设备环境信息，这可以帮助开发者修复潜在的问题、更好的进行规划和开发。&#xA;若启用此功能，我们将会收集以下信息：启动器内出现的错误，启动器版本信息与识别码，使用的 Windows 系统版本与架构，已安装的物理内存大小，NAT 与 IPv6 支持情况，是否使用过原版 PCL、HMCL 或 BakaXL。&#xA;&#xA;这些数据均不与你关联，我们也绝不会向第三方出售数据。不启用此功能不会影响你使用其他功能，但可能会影响开发者修复潜在 Bug。&#xA;&#xA;此项更改将在重新启动启动器后生效。</sys:String>
     <sys:String x:Key="Setup.Misc.System.Title">系统</sys:String>
 
     <!-- Setup.Ui -->
@@ -3250,19 +3243,8 @@
     <sys:String x:Key="Setup.Update.MirrorChyanCdk.ToolTip">Mirror 酱 (mirrorchyan.com) 是一个付费的第三方应用分发平台，用于提供国内有偿高速下载源。&#xA;这是一项可选服务，不填入 CDK 不影响正常使用与更新。&#xA;如果你有 Mirror 酱的 CDK，可以提供给 PCL CE，启动器会优先使用他们的高速下载源下载软件更新，也能缓解社区公益更新服务器的一些压力……</sys:String>
     <sys:String x:Key="Setup.Update.OtherOptions.Placeholder">AquaCL 3 是 PCL CE 的第一个主要更新，带来了让人眼前一亮的新设计，使用了最新开发技术，完全重构了基础体验，并更支持 macOS、Linux 等其他平台。</sys:String>
     <sys:String x:Key="Setup.Update.OtherOptions.Title">其他更新选项 - 升级到 AquaCL</sys:String>
-    <sys:String x:Key="Setup.Update.RestartInstall">重启安装</sys:String>
 
-    <!-- Setup.Update.Auto -->
 
-    <sys:String x:Key="Setup.Update.Auto.Disabled">不自动检查更新（不推荐）</sys:String>
-    <sys:String x:Key="Setup.Update.Auto.Disabled.ToolTip">关闭自动更新检查。这可能导致你无法及时获得更新。</sys:String>
-    <sys:String x:Key="Setup.Update.Auto.DownloadAndInstall">自动下载并安装更新</sys:String>
-    <sys:String x:Key="Setup.Update.Auto.DownloadAndInstall.ToolTip">启动器将会自动检查并下载可用更新，并在关闭启动器后自动安装更新。</sys:String>
-    <sys:String x:Key="Setup.Update.Auto.DownloadAndNotify">自动下载并提示更新</sys:String>
-    <sys:String x:Key="Setup.Update.Auto.DownloadAndNotify.ToolTip">启动器将会自动检查并下载可用更新，并在完成后提示你安装更新。</sys:String>
-    <sys:String x:Key="Setup.Update.Auto.NotifyOnly">提示更新</sys:String>
-    <sys:String x:Key="Setup.Update.Auto.NotifyOnly.ToolTip">启动器将会自动检查可用更新，然后提示你下载并安装更新。</sys:String>
-    <sys:String x:Key="Setup.Update.Auto.Title">自动更新设置</sys:String>
 
     <!-- Setup.Update.Channel -->
 
@@ -3601,10 +3583,6 @@
     <sys:String x:Key="Update.Task.GetVersionInfo">获取版本信息</sys:String>
     <sys:String x:Key="Update.Task.GetVersionInfoFailed">获取版本信息失败</sys:String>
     <sys:String x:Key="Update.Task.Install">安装更新</sys:String>
-    <sys:String x:Key="Update.Task.Prepare">准备更新</sys:String>
-    <sys:String x:Key="Update.Task.RefreshSettings">刷新设置 UI</sys:String>
-    <sys:String x:Key="Update.Task.RestartInstall">重启安装</sys:String>
-    <sys:String x:Key="Update.Task.ShowButton">显示按钮</sys:String>
 
     <!-- Watcher -->
 
@@ -3636,4 +3614,8 @@
     <sys:String x:Key="Watcher.WindowLoaded">Minecraft 窗口已加载：{0}（{1}）</sys:String>
     <sys:String x:Key="Watcher.WindowMaximized">已最大化 Minecraft 窗口：{0}</sys:String>
 
+    <sys:String x:Key="Setup.GameManage.Download.Backend">下载后端</sys:String>
+    <sys:String x:Key="Setup.GameManage.Download.Backend.BuiltIn">内置下载器（默认）</sys:String>
+    <sys:String x:Key="Setup.GameManage.Download.Backend.Aria2">aria2（自动管理）</sys:String>
+    <sys:String x:Key="Setup.GameManage.Download.Backend.Hint">首次使用时从内置发行包安装 aria2，无需额外下载；无法启动时回退到内置下载器。HTTP 协议与 DoH 设置仅适用于内置下载器。</sys:String>
 </ResourceDictionary>

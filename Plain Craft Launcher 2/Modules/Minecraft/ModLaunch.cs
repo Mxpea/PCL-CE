@@ -138,7 +138,7 @@ public static class ModLaunch
         #endif
 
         // 正版购买提示
-        if (!ProfileService.HasMicrosoftProfile)
+        if (!ProfileService.HasMicrosoftProfile && selectedProfile?.ProfileType == ProfileType.Offline)
         {
             if (Lang.IsFeaturesUnrestricted)
             {

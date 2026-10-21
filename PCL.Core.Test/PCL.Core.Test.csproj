@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PCL.Core\PCL.Core.csproj" />
+    <EmbeddedResource Include="..\Plain Craft Launcher 2\Dependencies\aria2\aria2-1.37.0-win-64bit-build1.zip" LogicalName="PCL.Aria2.Distribution.zip" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Net\**" />

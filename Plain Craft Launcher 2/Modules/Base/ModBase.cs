@@ -3565,7 +3565,7 @@ public static class ModBase
 
     public static bool CanFeedback(bool showHint)
     {
-        var stat = UpdateManager.GetVersionStatus();
+        var stat = showHint ? UpdateManager.GetVersionStatus() : UpdateManager.CachedVersionStatus;
         if (stat == UpdateEnums.VersionStatus.Latest) return true;
 
         if (!showHint) return false;

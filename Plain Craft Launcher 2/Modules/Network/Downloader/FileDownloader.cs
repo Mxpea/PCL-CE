@@ -43,7 +43,8 @@ public static class FileDownloader
     }
 
     private static async Task DownloadCoreAsync(IEnumerable<string> urls, string localPath, bool useBrowserUserAgent,
-        string customUserAgent, CancellationToken cancellationToken, bool enableParallelChunks, DownloadFile? trackedFile)
+        string customUserAgent, CancellationToken cancellationToken, bool enableParallelChunks, DownloadFile? trackedFile,
+        bool allowAria2 = true, string accept = "")
     {
         var urlList = urls.Select(url => RequestSigning.SecretCdnSign(url.Trim())).Where(url => !string.IsNullOrWhiteSpace(url))
             .Distinct().ToList();
@@ -60,7 +61,7 @@ public static class FileDownloader
                 try
                 {
                     await DownloadSingleAsync(url, localPath, useBrowserUserAgent, customUserAgent, cancellationToken,
-                        enableParallelChunks, trackedFile).ConfigureAwait(false);
+                        enableParallelChunks, trackedFile, allowAria2, accept).ConfigureAwait(false);
                     return;
                 }
                 catch (OperationCanceledException)
@@ -88,13 +89,24 @@ public static class FileDownloader
     }
 
     private static async Task DownloadSingleAsync(string url, string localPath, bool useBrowserUserAgent,
-        string customUserAgent, CancellationToken cancellationToken, bool enableParallelChunks, DownloadFile? trackedFile)
+        string customUserAgent, CancellationToken cancellationToken, bool enableParallelChunks, DownloadFile? trackedFile,
+        bool allowAria2, string accept)
     {
         ModBase.Log($"[Download] 开始下载：{url} -> {localPath}");
         CleanupTempFiles(localPath);
 
         var checker = trackedFile?.Check;
         var expectedSize = checker?.actualSize ?? -1;
+        if (allowAria2 && Config.Download.Backend == DownloadBackend.Aria2 &&
+            await Aria2Downloader.TryDownloadAsync(url, localPath, useBrowserUserAgent, customUserAgent,
+                enableParallelChunks, trackedFile, cancellationToken).ConfigureAwait(false))
+        {
+            await ValidateTempFileAsync(localPath, checker, cancellationToken).ConfigureAwait(false);
+            PromoteTempFile(localPath);
+            MarkDownloadCompleted(trackedFile);
+            ModBase.Log($"[Download] aria2 下载成功：{localPath}");
+            return;
+        }
         var sequentialRequestKind = (expectedSize >= 0 && expectedSize < AdaptiveRangeDownloader.SmallFileThreshold) ||
                                      (expectedSize < 0 && !enableParallelChunks)
             ? DownloadRequestKind.SmallOrBatch
@@ -114,18 +126,23 @@ public static class FileDownloader
         }
 
         await DownloadSequentiallyAsync(url, localPath, useBrowserUserAgent, customUserAgent, cancellationToken,
-            trackedFile, sequentialRequestKind).ConfigureAwait(false);
+            trackedFile, sequentialRequestKind, accept).ConfigureAwait(false);
     }
+
+    internal static Task DownloadNativeAsync(IEnumerable<string> urls, string localPath,
+        CancellationToken cancellationToken, string accept = "") =>
+        DownloadCoreAsync(urls, localPath, false, "", cancellationToken, false, null, false, accept);
 
     private static async Task DownloadSequentiallyAsync(string url, string localPath, bool useBrowserUserAgent,
         string customUserAgent, CancellationToken cancellationToken, DownloadFile? trackedFile,
-        DownloadRequestKind requestKind)
+        DownloadRequestKind requestKind, string accept)
     {
         const int bufferSize = 64 * 1024;
         const int readTimeoutMilliseconds = 30_000;
         using var connection = await DownloadResourceManager.AcquireConnectionAsync(url, cancellationToken)
             .ConfigureAwait(false);
         using var request = CreateDownloadRequest(url, useBrowserUserAgent, customUserAgent, requestKind);
+        if (!string.IsNullOrEmpty(accept)) request.Headers.Accept.ParseAdd(accept);
         using var response = await SendDownloadRequestAsync(url, request, cancellationToken).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
             throw new HttpRequestException($"下载请求失败：{(int)response.StatusCode} {response.ReasonPhrase}");
@@ -336,6 +353,7 @@ public static class FileDownloader
         var tempPath = localPath + ModNet.NetDownloadEnd;
         TryDeleteFile(localPath);
         TryDeleteFile(tempPath);
+        TryDeleteFile(tempPath + ".aria2");
     }
 
     private static void TryDeleteFile(string path)

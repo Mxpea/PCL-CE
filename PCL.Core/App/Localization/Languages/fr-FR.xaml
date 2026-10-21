@@ -287,4 +287,8 @@ Ce que vous pouvez essayer
     <sys:String x:Key="Download.Comp.Category.Energy">Énergie</sys:String>
     <sys:String x:Key="Download.Comp.Category.Entities">Entités</sys:String>
     <sys:String x:Key="Download.Comp.Category.Equipment">Équipement</sys:String>
+    <sys:String x:Key="Setup.GameManage.Download.Backend">Download backend</sys:String>
+    <sys:String x:Key="Setup.GameManage.Download.Backend.BuiltIn">Built-in (default)</sys:String>
+    <sys:String x:Key="Setup.GameManage.Download.Backend.Aria2">aria2 (automatically managed)</sys:String>
+    <sys:String x:Key="Setup.GameManage.Download.Backend.Hint">aria2 is installed from the bundled distribution on first use; no extra download is required. If it cannot start, the built-in downloader is used. HTTP protocol and DoH settings apply only to the built-in backend.</sys:String>
 </ResourceDictionary>

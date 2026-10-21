@@ -29,7 +29,10 @@ public sealed class MicrosoftProvider : IAuthenticateProvider
     {
         _clientId = string.IsNullOrWhiteSpace(clientId) ? Secrets.MSOAuthClientId : clientId;
         if (string.IsNullOrWhiteSpace(_clientId))
-            throw new InvalidOperationException("Microsoft OAuth client id is not configured.");
+            throw new InvalidOperationException(
+                "此构建未配置微软登录应用 Client ID，无法开始正版登录。" +
+                "请使用已配置 Client ID 的构建，或设置环境变量 PCL_MS_CLIENT_ID 后重新启动启动器。" +
+                "发布者请参阅 docs/microsoft-login.md。");
     }
 
     public async Task<DeviceCodeData> GetDeviceCodeAsync(CancellationToken token)

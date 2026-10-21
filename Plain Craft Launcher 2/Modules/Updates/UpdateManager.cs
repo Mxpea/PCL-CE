@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using PCL.Core.App;
@@ -10,7 +10,7 @@ namespace PCL;
 
 public static class UpdateManager
 {
-    public static bool isUpdateWaitingRestart;
+    public static UpdateEnums.VersionStatus CachedVersionStatus { get; set; } = UpdateEnums.VersionStatus.Unknown;
 
     public static UpdatesWrapperModel remoteServer = new(new List<IUpdateSource>
     {
@@ -45,12 +45,12 @@ public static class UpdateManager
                 var isBetaLatest = remoteServer.IsLatest(UpdateChannel.beta,
                     SystemInfo.IsArm64System ? UpdateArch.arm64 : UpdateArch.x64, SemVer.Parse(ModBase.versionBaseName),
                     ModBase.versionCode);
-                return isNewerThanStable && isBetaLatest
+                return CachedVersionStatus = isNewerThanStable && isBetaLatest
                     ? UpdateEnums.VersionStatus.Latest
                     : UpdateEnums.VersionStatus.NotLatest;
             }
 
-            return remoteServer.IsLatest(
+            return CachedVersionStatus = remoteServer.IsLatest(
                 IsCurrentVersionBeta ? UpdateChannel.beta : UpdateChannel.stable,
                 SystemInfo.IsArm64System ? UpdateArch.arm64 : UpdateArch.x64, SemVer.Parse(ModBase.versionBaseName),
                 ModBase.versionCode)
@@ -64,13 +64,14 @@ public static class UpdateManager
                 Lang.Text("Update.Check.Failed"),
                 ModBase.LogLevel.Hint,
                 userSummary: Lang.Text("Update.Check.Failed"));
-            return UpdateEnums.VersionStatus.Unknown;
+            return CachedVersionStatus = UpdateEnums.VersionStatus.Unknown;
         }
     }
     
     public static ModLoader.LoaderCombo<JsonObject> updateLoader;
 
-    public static void UpdateStart(UpdateEnums.UpdateType type, string receivedKey = null, bool forceValidated = false)
+    /// <summary>仅由更新页的安装按钮发起下载、校验及安装。</summary>
+    public static void UpdateStart()
     {
         var dlTargetPath = ModBase.exePath + @"PCL\Plain Craft Launcher Community Edition.exe";
         ModBase.RunInNewThread(() =>
@@ -79,31 +80,13 @@ public static class UpdateManager
             {
                 var version = remoteServer.GetLatestVersion(
                     IsCurrentVersionBeta ? UpdateChannel.beta : UpdateChannel.stable,
-                    SystemInfo.IsArm64System ? UpdateArch.arm64 : UpdateArch.x64
-                );
-
-                ModBase.WriteFile($"{ModBase.pathTemp}CEUpdateLog.md", version.Changelog);
-                ModBase.Log($"[Update] 远程最新版本: {version.VersionName}, 当前版本: {ModBase.versionBaseName}");
+                    SystemInfo.IsArm64System ? UpdateArch.arm64 : UpdateArch.x64);
+                ModBase.Log($"[Update] 手动更新：远程最新版本 {version.VersionName}，当前版本 {ModBase.versionBaseName}");
                 if (!(SemVer.Parse(version.VersionName) > SemVer.Parse(ModBase.versionBaseName)))
                     return;
-                if (type == UpdateEnums.UpdateType.PromptOnly)
-                {
-                    ModBase.RunInUi(() =>
-                    {
-                        if (ModMain.MyMsgBox(
-                                Lang.Text("Update.Available", ModBase.versionBaseName, version.VersionName),
-                                Lang.Text("Update.Title"),
-                                Lang.Text("Update.Action"),
-                                Lang.Text("Common.Action.Cancel")
-                            ) == 1)
-                            ModMain.frmMain.PageChange(FormMain.PageType.Setup, FormMain.PageSubType.SetupUpdate);
-                    });
-                    return;
-                    // 构造步骤加载器
-                }
 
+                ModBase.WriteFile($"{ModBase.pathTemp}CEUpdateLog.md", version.Changelog);
                 var loaders = new List<ModLoader.LoaderBase>();
-                // 下载
                 loaders.AddRange(remoteServer.GetDownloadLoader(
                     IsCurrentVersionBeta ? UpdateChannel.beta : UpdateChannel.stable,
                     SystemInfo.IsArm64System ? UpdateArch.arm64 : UpdateArch.x64, dlTargetPath));
@@ -113,57 +96,23 @@ public static class UpdateManager
                     if ((curHash ?? "") != (version.Sha256 ?? ""))
                         throw new Exception(Lang.Text("Update.Error.Sha256Mismatch", version.Sha256, curHash));
                 }));
-                if (type == UpdateEnums.UpdateType.UpdateNow)
-                    loaders.Add(new ModLoader.LoaderTask<int, int>(Lang.Text("Update.Task.Install"), _ => UpdateRestart(true)));
-                else if (type == UpdateEnums.UpdateType.Silent)
-                    loaders.Add(new ModLoader.LoaderTask<int, int>(Lang.Text("Update.Task.Prepare"), _ => isUpdateWaitingRestart = true));
-                else if (type == UpdateEnums.UpdateType.DownloadAndPrompt)
-                    loaders.Add(new ModLoader.LoaderTask<int, int>(Lang.Text("Update.Task.ShowButton"), _ =>
-                    {
-                        isUpdateWaitingRestart = true;
-                        ModBase.RunInUi(() =>
-                        {
-                            ModMain.frmMain.BtnExtraUpdateRestart.ToolTip =
-                                Lang.Text("Main.Extra.UpdateRestart.ToolTipWithVersion", ModBase.versionBaseName, version.VersionName);
-                            ModMain.frmMain.BtnExtraUpdateRestart.ShowRefresh();
-                            ModMain.frmMain.BtnExtraUpdateRestart.Ribble();
-                        });
-                    })
-                    {
-                        show = false
-                    });
-                loaders.Add(new ModLoader.LoaderTask<int, int>(Lang.Text("Update.Task.RefreshSettings"), _ =>
-                {
-                    if (ModMain.frmSetupUpdate is not null)
-                        ModBase.RunInUi(() =>
-                        {
-                            ModMain.frmSetupUpdate.BtnUpdate.Text = Lang.Text("Update.Task.RestartInstall");
-                            ModMain.frmSetupUpdate.BtnUpdate.IsEnabled = true;
-                        });
-                })
-                {
-                    show = false
-                });
-                // 启动
+                loaders.Add(new ModLoader.LoaderTask<int, int>(Lang.Text("Update.Task.Install"), _ => UpdateRestart()));
+
                 updateLoader = new ModLoader.LoaderCombo<JsonObject>(Lang.Text("Update.Title"), loaders);
                 updateLoader.Start();
-                if (type == UpdateEnums.UpdateType.UpdateNow)
-                {
-                    ModLoader.LoaderTaskbarAdd(updateLoader);
-                    ModMain.frmMain.BtnExtraDownload.ShowRefresh();
-                    ModMain.frmMain.BtnExtraDownload.Ribble();
-                }
+                ModLoader.LoaderTaskbarAdd(updateLoader);
+                ModMain.frmMain.BtnExtraDownload.ShowRefresh();
+                ModMain.frmMain.BtnExtraDownload.Ribble();
             }
             catch (Exception ex)
             {
                 ModBase.Log(ex, "[Update] 获取启动器更新失败");
-                if (type != UpdateEnums.UpdateType.Silent)
-                    HintService.Hint(Lang.Text("Update.Error.FetchFailed"), HintType.Error);
+                HintService.Hint(Lang.Text("Update.Error.FetchFailed"), HintType.Error);
             }
         });
     }
 
-    public static void UpdateRestart(bool triggerRestartAndByEnd, bool triggerRestart = true)
+    private static void UpdateRestart()
     {
         try
         {
@@ -176,19 +125,16 @@ public static class UpdateManager
 
             // id old new restart
             var text =
-                $"update {Process.GetCurrentProcess().Id} \"{Basics.ExecutablePath}\" \"{fileName}\" {(triggerRestart ? "true" : "false")}";
+                $"update {Process.GetCurrentProcess().Id} \"{Basics.ExecutablePath}\" \"{fileName}\" true";
             ModBase.Log("[System] 更新程序启动，参数：" + text);
             Process.Start(new ProcessStartInfo(fileName)
                 { WindowStyle = ProcessWindowStyle.Hidden, CreateNoWindow = true, Arguments = text });
-            if (triggerRestartAndByEnd)
-            {
-                ModMain.frmMain.EndProgram(false, true);
-                ModBase.Log("[System] 已由于更新强制结束程序");
-            }
+            ModMain.frmMain.EndProgram(false);
+            ModBase.Log("[System] 已由于手动更新结束程序");
         }
         catch (Win32Exception ex)
         {
-            ModBase.Log(ex, "自动更新时触发 Win32 错误，疑似被拦截");
+            ModBase.Log(ex, "手动安装更新时触发 Win32 错误，疑似被拦截");
             ModMain.MyMsgBox(
                 Lang.Text("Update.Error.UpdateBlockedMessage", ModBase.exePath),
                 Lang.Text("Update.Error.UpdateBlocked"),
@@ -228,40 +174,6 @@ public static class UpdateManager
         var loader = new ModLoader.LoaderCombo<int>(Lang.Text("Update.Task.DownloadLatestStable"), loaders);
         loader.Start();
         loader.WaitForExit();
-    }
-
-    public static ModLoader.LoaderTask<int, int> serverLoader =
-        new(Lang.Text("Update.Service.PclCe"),
-            _ => LoadOnlineInfo(),
-            priority: ThreadPriority.BelowNormal);
-
-    private static void LoadOnlineInfo()
-    {
-        ScheduleBasedOnConfig();
-        AnnouncementService.Load();
-    }
-
-    private static void ScheduleBasedOnConfig()
-    {
-        switch (Config.Update.UpdateMode)
-        {
-            case LauncherAutoUpdateBehavior.DownloadAndInstall:
-                ModBase.Log("[Update] 更新设置: 自动下载并安装更新");
-                if (GetVersionStatus() != UpdateEnums.VersionStatus.Latest)
-                    UpdateStart(UpdateEnums.UpdateType.Silent);
-                break;
-            case LauncherAutoUpdateBehavior.DownloadAndAnnounce:
-                ModBase.Log("[Update] 更新设置: 自动下载并提示更新");
-                UpdateStart(UpdateEnums.UpdateType.DownloadAndPrompt);
-                break;
-            case LauncherAutoUpdateBehavior.AnnounceOnly:
-                ModBase.Log("[Update] 更新设置: 提示更新");
-                UpdateStart(UpdateEnums.UpdateType.PromptOnly);
-                break;
-            default:
-                ModBase.Log("[Update] 更新设置: 不自动检查更新");
-                return;
-        }
     }
 
     /// <summary>

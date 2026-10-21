@@ -9,17 +9,13 @@ public static class Secrets
     /// <summary>
     /// 微软 OAuth 的 Client ID
     /// </summary>
-    public static string MSOAuthClientId { get; } = EnvironmentInterop.GetSecret("MS_CLIENT_ID", readEnvDebugOnly: true).ReplaceNullOrEmpty();
+    // Client ID 是公开的应用标识；允许未嵌入配置的本地 Release 构建在运行时读取。
+    public static string MSOAuthClientId { get; } = EnvironmentInterop.GetSecret("MS_CLIENT_ID").ReplaceNullOrEmpty();
 
     /// <summary>
     /// CurseForge API 的 Client ID
     /// </summary>
     public static string CurseForgeAPIKey { get; } = EnvironmentInterop.GetSecret("CURSEFORGE_API_KEY", readEnvDebugOnly: true).ReplaceNullOrEmpty();
-
-    /// <summary>
-    /// 遥测密钥
-    /// </summary>
-    public static string TelemetryKey { get; } = EnvironmentInterop.GetSecret("TELEMETRY_KEY", readEnvDebugOnly: true).ReplaceNullOrEmpty();
 
     /// <summary>
     /// Natayark ID OAuth 的 Client ID

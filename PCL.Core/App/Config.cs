@@ -24,11 +24,6 @@ public static partial class Config
         [ConfigItem<bool>("SystemDisableHardwareAcceleration", false)] public partial bool DisableHardwareAcceleration { get; set; }
 
         /// <summary>
-        /// 遥测。
-        /// </summary>
-        [ConfigItem<bool>("SystemTelemetry", false)] public partial bool Telemetry { get; set; }
-
-        /// <summary>
         /// 实时日志最大行数。
         /// </summary>
         [ConfigItem<int>("SystemMaxLog", 13)] public partial int MaxGameLog { get; set; }
@@ -79,6 +74,7 @@ public static partial class Config
         [ConfigItem<int>("ToolDownloadThread", 63)] public partial int ThreadLimit { get; set; }
         [ConfigItem<int>("ToolDownloadFileConnection", 7)] public partial int FileConnectionLimit { get; set; }
         [ConfigItem<int>("ToolDownloadSpeed", 42)] public partial int SpeedLimit { get; set; }
+        [ConfigItem<DownloadBackend>("ToolDownloadBackend", DownloadBackend.Aria2)] public partial DownloadBackend Backend { get; set; }
         [ConfigItem<DownloadHttpMode>("ToolDownloadHttpMode", DownloadHttpMode.Auto)] public partial DownloadHttpMode HttpMode { get; set; }
         [ConfigItem<int>("ToolDownloadSource", 1)] public partial int FileSource { get; set; }
         [ConfigItem<int>("ToolDownloadVersion", 1)] public partial int VersionListSource { get; set; }
@@ -117,11 +113,6 @@ public static partial class Config
     /// </summary>
     [ConfigGroup("Update")] partial class UpdateConfigGroup
     {
-        /// <summary>
-        /// 自动更新行为。
-        /// </summary>
-        [ConfigItem<LauncherAutoUpdateBehavior>("SystemSystemUpdate", LauncherAutoUpdateBehavior.DownloadAndAnnounce, ConfigSource.Local)] public partial LauncherAutoUpdateBehavior UpdateMode { get; set; }
-
         /// <summary>
         /// 更新分支。
         /// </summary>

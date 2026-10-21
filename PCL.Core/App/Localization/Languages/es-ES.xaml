@@ -10,4 +10,8 @@
     <sys:String x:Key="Meta.Code">es-ES</sys:String>
     <sys:String x:Key="Meta.Name">Español (España)</sys:String>
 
+    <sys:String x:Key="Setup.GameManage.Download.Backend">Download backend</sys:String>
+    <sys:String x:Key="Setup.GameManage.Download.Backend.BuiltIn">Built-in (default)</sys:String>
+    <sys:String x:Key="Setup.GameManage.Download.Backend.Aria2">aria2 (automatically managed)</sys:String>
+    <sys:String x:Key="Setup.GameManage.Download.Backend.Hint">aria2 is installed from the bundled distribution on first use; no extra download is required. If it cannot start, the built-in downloader is used. HTTP protocol and DoH settings apply only to the built-in backend.</sys:String>
 </ResourceDictionary>

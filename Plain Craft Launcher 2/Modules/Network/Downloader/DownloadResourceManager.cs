@@ -12,11 +12,25 @@ internal static class DownloadResourceManager
     private static readonly ConcurrentDictionary<string, HostQuotaEntry> HostConnectionQuotas = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Lock SpeedLock = new();
     private static int _activeConnectionCount;
+    private static int _externalConnectionCount;
     private static long _speedBytes;
     private static long _speedSnapshotTick = Stopwatch.GetTimestamp();
     private static long _speed;
 
     public static int ActiveConnectionCount => Volatile.Read(ref _activeConnectionCount);
+
+    // Split the bandwidth budget by reserved connections when fallback/native and aria2 tasks overlap.
+    public static long Aria2SpeedLimit => GetSpeedBudget(external: true);
+
+    private static long GetSpeedBudget(bool external)
+    {
+        var limit = ModNet.NetTaskSpeedLimitHigh;
+        if (limit <= 0) return limit;
+        var total = Math.Max(1, Volatile.Read(ref _activeConnectionCount));
+        var aria2 = Math.Clamp(Volatile.Read(ref _externalConnectionCount), 0, total);
+        var count = external ? aria2 : total - aria2;
+        return Math.Max(1, (long)(limit * ((double)count / total)));
+    }
 
     public static long DownloadSpeed
     {
@@ -47,21 +61,22 @@ internal static class DownloadResourceManager
     }
 
     public static async ValueTask<DownloadConnectionLease> AcquireConnectionAsync(string url,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, int connectionCount = 1, bool external = false)
     {
         var host = Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri.Host : url;
         var hostEntry = AcquireHostQuotaEntry(host);
         DownloadQuotaLease? hostLease = null;
         try
         {
-            hostLease = await hostEntry.Quota.AcquireAsync(1, () => ModNet.NetTaskConnectionsPerHostLimit,
+            hostLease = await hostEntry.Quota.AcquireAsync(connectionCount, () => ModNet.NetTaskConnectionsPerHostLimit,
                 cancellationToken)
             .ConfigureAwait(false);
-            var globalLease = await ConnectionQuota.AcquireAsync(1,
+            var globalLease = await ConnectionQuota.AcquireAsync(connectionCount,
                 () => Math.Clamp(ModNet.NetTaskConnectionLimit, 1, ModNet.NetTaskConnectionLimitMax), cancellationToken)
                 .ConfigureAwait(false);
-            Interlocked.Increment(ref _activeConnectionCount);
-            return new DownloadConnectionLease(globalLease, hostLease, hostEntry);
+            Interlocked.Add(ref _activeConnectionCount, connectionCount);
+            if (external) Interlocked.Add(ref _externalConnectionCount, connectionCount);
+            return new DownloadConnectionLease(globalLease, hostLease, hostEntry, connectionCount, external);
         }
         catch
         {
@@ -77,9 +92,10 @@ internal static class DownloadResourceManager
         return new DownloadBufferLease(lease, ArrayPool<byte>.Shared.Rent(minBytes));
     }
 
-    internal static void ReleaseConnection()
+    internal static void ReleaseConnection(int connectionCount, bool external)
     {
-        Interlocked.Decrement(ref _activeConnectionCount);
+        Interlocked.Add(ref _activeConnectionCount, -connectionCount);
+        if (external) Interlocked.Add(ref _externalConnectionCount, -connectionCount);
     }
 
     public static void OnConnectionLimitChanged()
@@ -104,7 +120,7 @@ internal static class DownloadResourceManager
 
     public static async Task ThrottleAsync(int bytes, CancellationToken ct)
     {
-        var limitHigh = ModNet.NetTaskSpeedLimitHigh;
+        var limitHigh = GetSpeedBudget(external: false);
         if (limitHigh <= 0 || bytes <= 0)
         {
             return;
@@ -158,7 +174,7 @@ internal static class DownloadResourceManager
         {
             while (true)
             {
-                var currentLimit = ModNet.NetTaskSpeedLimitHigh;
+                var currentLimit = GetSpeedBudget(external: false);
                 if (currentLimit <= 0)
                 {
                     break;
@@ -168,7 +184,7 @@ internal static class DownloadResourceManager
                 {
                     lock (ThrottleScheduleLock)
                     {
-                        limitHigh = ModNet.NetTaskSpeedLimitHigh;
+                        limitHigh = GetSpeedBudget(external: false);
                         if (limitHigh <= 0)
                             break;
 
@@ -247,7 +263,7 @@ internal static class DownloadResourceManager
 }
 
 internal sealed class DownloadConnectionLease(DownloadQuotaLease globalLease, DownloadQuotaLease hostLease,
-    HostQuotaEntry hostEntry) : IDisposable
+    HostQuotaEntry hostEntry, int connectionCount, bool external) : IDisposable
 {
     private DownloadQuotaLease? _globalLease = globalLease;
     private DownloadQuotaLease? _hostLease = hostLease;
@@ -259,7 +275,7 @@ internal sealed class DownloadConnectionLease(DownloadQuotaLease globalLease, Do
         if (globalLease is null)
             return;
 
-        DownloadResourceManager.ReleaseConnection();
+        DownloadResourceManager.ReleaseConnection(connectionCount, external);
         globalLease.Dispose();
         Interlocked.Exchange(ref _hostLease, null)?.Dispose();
         var hostEntry = Interlocked.Exchange(ref _hostEntry, null);

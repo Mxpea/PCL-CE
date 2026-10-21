@@ -104,10 +104,10 @@
       "license": "https://github.com/protobuf-net/protobuf-net/blob/main/Licence.txt"
     },
     {
-      "name": "Sentry",
-      "info": "Copyright © 2018 Sentry\nLicensed under the MIT license.",
-      "website": "https://sentry.io/",
-      "license": "https://github.com/getsentry/sentry-dotnet/blob/main/LICENSE"
+      "name": "aria2",
+      "info": "Copyright © Tatsuhiro Tsujikawa and contributors\nLicensed under GPL-2.0-or-later; includes OpenSSL. See installed COPYING and LICENSE.OpenSSL.",
+      "website": "https://github.com/aria2/aria2/tree/release-1.37.0",
+      "license": "https://github.com/aria2/aria2/blob/release-1.37.0/COPYING"
     },
     {
       "name": "LWJGL Unsafe Agent",

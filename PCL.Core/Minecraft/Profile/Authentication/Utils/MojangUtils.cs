@@ -40,6 +40,13 @@ public static class MojangUtils
                 }
                 ), Encoding.UTF8, "application/json")
             ).SendAsync(cancellationToken: token).ConfigureAwait(false);
+        if (response.StatusCode == HttpStatusCode.Forbidden)
+            throw new IdentityModelAuthenticationException("minecraft_login_forbidden",
+                "Minecraft 登录接口 authentication/login_with_xbox 返回 HTTP 403。" +
+                "微软及 Xbox 验证已完成，但 Minecraft 服务拒绝了令牌交换。" +
+                "请先确认当前 Client ID 已获准访问 Minecraft Java 服务 API；" +
+                "若已获批准，请检查网络代理或网关是否拦截该接口。" +
+                "这一步尚未检查账号的游戏购买许可，不能据此判断账号未购买游戏。");
         response.EnsureSuccessStatusCode();
         return await response.AsJsonAsync<MojangResponse>(cancellationToken: token).ConfigureAwait(false);
     }
